@@ -13,7 +13,6 @@ import org.shredzone.acme4j.Certificate;
 import org.shredzone.acme4j.Order;
 import org.shredzone.acme4j.Session;
 import org.shredzone.acme4j.Status;
-import org.shredzone.acme4j.challenge.Challenge;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.CSRBuilder;
@@ -42,6 +41,10 @@ public class WildcardApplication implements ApplicationRunner{
 	// RSA key size of generated key pairs
 	private static final int KEY_SIZE = 2048;
 
+	private enum STAGE {
+		TEST, PROD
+	};
+	
 	private static final Logger LOG = LoggerFactory.getLogger(WildcardApplication.class);
 
 	public static void main(String[] args) {
@@ -53,21 +56,29 @@ public class WildcardApplication implements ApplicationRunner{
 	 * --dnsProvider alibaba
 	 * --accessKey DNS Provider API accessKey
 	 * --accessSecret DNS Provider API accessSecret
-	 * 
+	 * --stage TEST or PROD
 	 */
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
+		STAGE stage = STAGE.TEST;
 		if(!args.containsOption("domain") ) {
-			LOG.error("The Options --domain=<domain> is a must!");
+			LOG.error("The Option --domain=<domain> is a must!");
 			System.exit(0);
 		}
 		if(!args.containsOption("dnsProvider") ) {
-			LOG.error("The Options --dnsProvider=<dnsProvider> is a must!");
+			LOG.error("The Option --dnsProvider=<dnsProvider> is a must!");
 			System.exit(0);
 		}
 		if(!args.containsOption("accessKey") ||  !args.containsOption("accessSecret")) {
 			LOG.error("The Options --accessKey=<accessKey> and --accessSecret=<accessSecret> are must!");
 			System.exit(0);
+		}
+		if(!args.containsOption("stage")) {
+			LOG.warn("The Option --stage=<TEST|PROD> is not set, will use the default stage: TEST!");
+		}else {
+			if("PROD".equals(args.getOptionValues("stage").get(0))) {
+				stage = STAGE.PROD;
+			}
 		}
 		
 		String domain = args.getOptionValues("domain").get(0);
@@ -79,14 +90,21 @@ public class WildcardApplication implements ApplicationRunner{
 		String[] domains = new String[] {domain, "*."+domain};
 		
 		LOG.info("Starting up...");
+		LOG.info("domain="+domain);
+		LOG.info("dnsProvider="+dnsProviderName);
+		LOG.info("stage="+stage);
 		Security.addProvider(new BouncyCastleProvider());
 		try {
 			
 			// Create a session for Let's Encrypt.
 			// Use "acme://letsencrypt.org" for production server
 			// Use "acme://letsencrypt.org/staging" for test server
-			Session session = new Session("acme://letsencrypt.org/staging");
-			
+			Session session = null;
+			if(stage == STAGE.PROD) {
+				session = new Session("acme://letsencrypt.org");
+			}else {
+				session = new Session("acme://letsencrypt.org/staging");
+			}
 			//Create user account key
 			KeyPair userKeyPair = KeyPairUtils.createKeyPair(KEY_SIZE);
 

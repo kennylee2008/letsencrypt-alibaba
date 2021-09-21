@@ -43,7 +43,6 @@ public class AlibabaDnsProvider implements DnsProvider {
 	            this.accessSecret);        // AccessKey Secret
 		
 		AddDomainRecordRequest request = new AddDomainRecordRequest();
-		//DescribeSubDomainRecordsRequest request = new DescribeSubDomainRecordsRequest();
 		request.setActionName("AddDomainRecord");
 		request.setDomainName(domainName);
 		request.setRR(rR);

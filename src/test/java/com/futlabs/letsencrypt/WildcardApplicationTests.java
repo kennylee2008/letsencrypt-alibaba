@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(args = {
-		"--domain=jobprojectbidding.com",
+		"--domain=futlabs.com",
 		"--dnsProvider=alibaba",
 		"--accessKey=<accessKey>",
 		"--accessSecret=<accessSecret>"

@@ -111,9 +111,7 @@ public class WildcardApplication implements ApplicationRunner{
 			//Create an account
 			Account account = new AccountBuilder().agreeToTermsOfService().useKeyPair(userKeyPair).create(session);
 			
-			//Create domain key
-			KeyPair domainKeyPair = KeyPairUtils.createKeyPair(KEY_SIZE);
-			
+
 			// Order the certificate
 			Order order = account.newOrder().domains(domains).create();
 			
@@ -198,12 +196,19 @@ public class WildcardApplication implements ApplicationRunner{
 				
 			}
 			
-			//Generate a CSR for the domains
+			//Generate a CSR for the domain
+			
+			//Create domain key
+			KeyPair domainKeyPair = KeyPairUtils.createKeyPair(KEY_SIZE);
+			
+			//Create CSR
 			CSRBuilder csrb = new CSRBuilder();
 			csrb.addDomains(domains);
 			csrb.sign(domainKeyPair);
+			byte[] csr = csrb.getEncoded();
 			
-			order.execute(csrb.getEncoded());
+			//Request for a certificate
+			order.execute(csr);
 			
 			// Wait for the order to complete
 			try {
